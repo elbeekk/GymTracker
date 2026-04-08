@@ -36,9 +36,10 @@ struct LiveWorkoutView: View {
 
                 if let cue = coach.coachingCue {
                     Text(cue)
-                        .font(.system(size: 22, weight: .semibold, design: .rounded))
+                        .font(.system(size: 17, weight: .semibold, design: .rounded))
                         .foregroundStyle(.white)
                         .multilineTextAlignment(.center)
+                        .lineSpacing(4)
                         .padding(.horizontal, 18)
                         .padding(.vertical, 14)
                         .background(.ultraThinMaterial)
@@ -74,6 +75,11 @@ struct LiveWorkoutView: View {
         .onAppear {
             coach.refreshAvailability()
             refreshCoach()
+        }
+        .onChange(of: sessionManager.poseFrameIndex) { _, _ in
+            if let locked = sessionManager.overlay.people.first(where: { $0.role == .locked }) {
+                coach.recordFrame(locked.points)
+            }
         }
         .onChange(of: sessionManager.formMessage) { _, _ in refreshCoach() }
         .onChange(of: sessionManager.formStatus) { _, _ in refreshCoach() }

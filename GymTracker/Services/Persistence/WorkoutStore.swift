@@ -27,16 +27,24 @@ final class WorkoutStore {
         entries(on: date).reduce(0) { $0 + $1.caloriesBurned }
     }
 
+    func totalReps(on date: Date) -> Int {
+        entries(on: date).reduce(0) { $0 + $1.repCount }
+    }
+
+    func totalMinutes(on date: Date) -> Int {
+        entries(on: date).reduce(0) { $0 + $1.durationSeconds } / 60
+    }
+
     var totalCaloriesToday: Double {
         totalCalories(on: Date())
     }
 
     var totalRepsToday: Int {
-        entries(on: Date()).reduce(0) { $0 + $1.repCount }
+        totalReps(on: Date())
     }
 
     var totalMinutesToday: Int {
-        entries(on: Date()).reduce(0) { $0 + $1.durationSeconds } / 60
+        totalMinutes(on: Date())
     }
 
     /// Returns all dates (in current calendar) that have at least one workout entry.

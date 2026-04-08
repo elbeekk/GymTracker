@@ -5,9 +5,11 @@ struct TrackingWrapperView: View {
     let workoutStore: WorkoutStore
     let onFinish: () -> Void
 
+    @State private var healthKit = HealthKitService()
     @State private var sessionManager: WorkoutSessionManager
     @State private var startTime = Date()
     @State private var showFinishConfirm = false
+    @State private var isSavingWorkout = false
 
     init(exercise: CatalogExercise, workoutStore: WorkoutStore, onFinish: @escaping () -> Void) {
         self.exercise = exercise
@@ -53,7 +55,10 @@ struct TrackingWrapperView: View {
                 .padding(.top, 56)
             }
         }
-        .task { await sessionManager.startIfNeeded() }
+        .task {
+            await sessionManager.startIfNeeded()
+            await healthKit.requestActiveEnergyAuthorizationIfNeeded()
+        }
         .sheet(isPresented: $sessionManager.isLessonSheetPresented) {
             LessonWarningView(sessionManager: sessionManager)
                 .presentationDetents([.fraction(0.38), .medium])
@@ -64,7 +69,11 @@ struct TrackingWrapperView: View {
             isPresented: $showFinishConfirm,
             titleVisibility: .visible
         ) {
-            Button("Save & Finish") { saveAndFinish() }
+            Button("Save & Finish") {
+                guard !isSavingWorkout else { return }
+                isSavingWorkout = true
+                Task { await saveAndFinish() }
+            }
             Button("Discard", role: .destructive) { onFinish() }
             Button("Continue", role: .cancel) {}
         } message: {
@@ -72,9 +81,13 @@ struct TrackingWrapperView: View {
         }
     }
 
-    private func saveAndFinish() {
-        let duration = Int(Date().timeIntervalSince(startTime))
-        let calories = exercise.estimatedCaloriesPerMinute * Double(max(duration, 1)) / 60.0
+    @MainActor
+    private func saveAndFinish() async {
+        let endTime = Date()
+        let duration = Int(endTime.timeIntervalSince(startTime))
+        let estimatedCalories = exercise.estimatedCaloriesPerMinute * Double(max(duration, 1)) / 60.0
+        let calories = await healthKit.activeEnergyBurnedKilocalories(start: startTime, end: endTime) ?? estimatedCalories
+
         workoutStore.save(WorkoutEntry(
             exerciseName: exercise.name,
             categoryName: exercise.category.displayName,
@@ -82,6 +95,8 @@ struct TrackingWrapperView: View {
             durationSeconds: duration,
             caloriesBurned: calories
         ))
+
+        isSavingWorkout = false
         onFinish()
     }
 }

@@ -9,25 +9,49 @@ enum AppTheme {
     static let danger = Color(uiColor: .systemRed)
     static let info = Color(uiColor: .systemTeal)
 
-    static let pageBackground = Color(uiColor: .systemGroupedBackground)
-    static let surface = Color(uiColor: .secondarySystemGroupedBackground)
-    static let elevatedSurface = Color(uiColor: .systemBackground)
-    static let border = Color(uiColor: .separator).opacity(0.18)
-    static let secondaryText = Color(uiColor: .secondaryLabel)
-    static let tertiaryText = Color(uiColor: .tertiaryLabel)
+    static let pageBackground   = Color(uiColor: .systemGroupedBackground)
+    static let surface          = Color(uiColor: .secondarySystemGroupedBackground)
+    static let elevatedSurface  = Color(uiColor: .systemBackground)
+    static let border           = Color(uiColor: .separator).opacity(0.18)
+    static let secondaryText    = Color(uiColor: .secondaryLabel)
+    static let tertiaryText     = Color(uiColor: .tertiaryLabel)
 
-    // Gym dark theme (used by home/browse/detail screens)
-    static let gymBg         = Color(red: 0.04, green: 0.04, blue: 0.07)   // #0A0A12
-    static let gymSurface    = Color(red: 0.09, green: 0.09, blue: 0.13)   // #171721
-    static let gymCard       = Color(red: 0.13, green: 0.13, blue: 0.19)   // #212130
-    static let gymBorder     = Color.white.opacity(0.08)
-    static let gymAccent     = Color(red: 1.00, green: 0.42, blue: 0.21)   // #FF6B35 orange-red
-    static let gymAccentGlow = Color(red: 1.00, green: 0.42, blue: 0.21).opacity(0.18)
-    static let gymGreen      = Color(red: 0.30, green: 0.85, blue: 0.60)   // #4DD699 mint
-    static let gymBlue       = Color(red: 0.36, green: 0.65, blue: 1.00)   // #5CA6FF sky
-    static let gymText       = Color.white
-    static let gymSubtext    = Color.white.opacity(0.55)
-    static let gymDim        = Color.white.opacity(0.25)
+    // MARK: - Gym adaptive colors (dark + light)
+
+    static let gymBg = Color(UIColor { t in
+        t.userInterfaceStyle == .dark
+            ? UIColor(red: 0.04, green: 0.04, blue: 0.07, alpha: 1)   // #0A0A12
+            : UIColor.systemGroupedBackground
+    })
+
+    static let gymSurface = Color(UIColor { t in
+        t.userInterfaceStyle == .dark
+            ? UIColor(red: 0.09, green: 0.09, blue: 0.13, alpha: 1)   // #171721
+            : UIColor.secondarySystemGroupedBackground
+    })
+
+    static let gymCard = Color(UIColor { t in
+        t.userInterfaceStyle == .dark
+            ? UIColor(red: 0.13, green: 0.13, blue: 0.19, alpha: 1)   // #212130
+            : UIColor.tertiarySystemGroupedBackground
+    })
+
+    static let gymBorder = Color(UIColor { t in
+        t.userInterfaceStyle == .dark
+            ? UIColor.white.withAlphaComponent(0.08)
+            : UIColor.black.withAlphaComponent(0.08)
+    })
+
+    // Text — use system labels so they flip automatically
+    static let gymText    = Color(UIColor.label)
+    static let gymSubtext = Color(UIColor.secondaryLabel)
+    static let gymDim     = Color(UIColor.tertiaryLabel)
+
+    // Accent colors — same in both modes
+    static let gymAccent     = Color(red: 1.00, green: 0.42, blue: 0.21)   // #FF6B35
+    static let gymAccentGlow = Color(red: 1.00, green: 0.42, blue: 0.21).opacity(0.15)
+    static let gymGreen      = Color(red: 0.20, green: 0.78, blue: 0.50)   // slightly richer
+    static let gymBlue       = Color(red: 0.36, green: 0.65, blue: 1.00)   // #5CA6FF
 }
 
 // MARK: - Category gradient helpers

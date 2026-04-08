@@ -18,12 +18,14 @@ final class FormCoachService {
 
     private(set) var coachingCue: String? = nil
     private(set) var providerState: ProviderState = .deterministic
-    private(set) var providerStatus = "Paste your Claude key in Profile"
+    private(set) var providerStatus = "Claude ready"
 
     private let configuration: AppConfiguration
     private let anthropicService: AnthropicCoachService
     private var lastRequestKey: String = ""
     private var currentTask: Task<Void, Never>? = nil
+    private var keypointFrames: [[PoseKeypoint]] = []
+    private let maxFrameBuffer = 20
 
     init(
         configuration: AppConfiguration? = nil,
@@ -32,6 +34,16 @@ final class FormCoachService {
         self.configuration = configuration ?? AppConfiguration()
         self.anthropicService = anthropicService ?? AnthropicCoachService()
         refreshAvailability()
+    }
+
+    /// Call each camera frame with the locked person's keypoints so Claude has movement history.
+    func recordFrame(_ points: [PoseKeypoint]) {
+        let filtered = points.filter { $0.confidence > 0.4 && !isFaceKeypoint($0.name) }
+        guard !filtered.isEmpty else { return }
+        keypointFrames.append(filtered)
+        if keypointFrames.count > maxFrameBuffer {
+            keypointFrames.removeFirst()
+        }
     }
 
     /// Call this every time formStatus or formMessage changes.
@@ -49,6 +61,7 @@ final class FormCoachService {
             currentTask?.cancel()
             coachingCue = nil
             lastRequestKey = ""
+            keypointFrames.removeAll()
             return
         }
 
@@ -89,7 +102,7 @@ final class FormCoachService {
             providerStatus = "Claude ready"
         } else {
             providerState = .foundationModels
-            providerStatus = "Add Claude key in Profile"
+            providerStatus = "On-device AI active"
         }
     }
 
@@ -141,9 +154,7 @@ final class FormCoachService {
         return CueResult(
             cue: localResult.cue,
             provider: localResult.provider,
-            status: configuration.anthropic.apiKey == nil
-                ? "Add Claude key in Profile"
-                : localResult.status
+            status: localResult.status
         )
     }
 
@@ -175,38 +186,71 @@ final class FormCoachService {
         primaryMetric: Double?,
         failedRules: [String]
     ) -> String {
-        let bodyParts = relevantBodyParts(for: exercise)
         let failedRulesLine = failedRules.isEmpty
-            ? "Failed checks: none provided"
+            ? "Failed checks: none"
             : "Failed checks: \(failedRules.joined(separator: ", "))"
+
+        let poseSection = keypointFramesSummary()
+
         return """
-        You are a professional gym coach giving live feedback from body-pose tracking.
         Exercise: \(exercise)
-        Detected form problem: \(issue.isEmpty ? "No plain-language issue provided" : issue)
+        Form problem: \(issue.isEmpty ? "unspecified" : issue)
         \(failedRulesLine)
         \(metricLine(for: exercise, primaryMetric: primaryMetric))
-        Key body parts involved: \(bodyParts)
+        \(poseSection)
 
-        Convert the technical analysis into one short correction the athlete can understand instantly.
-        Rules:
-        - Give exactly ONE correction
-        - Maximum 7 words
-        - Start with an action verb
-        - Name the specific body part
-        - Use plain gym language, not words like alignment, tempo, stability, metric, or tracking
-        - If depth or range is the issue, say what body part should move and where
-        - Never say "range of motion", "rep not counted", "invalid", "tracking", or "analysis"
-        - No punctuation
-        - No explanation
-
-        Example good responses:
-        "Push knees outward and sit deeper"
-        "Keep chest up and brace core"
-        "Tuck elbows closer to your ribs"
-        "Stack wrists over shoulders overhead"
-
-        Return only the coaching cue.
+        Give 2-3 sentences of specific coaching corrections. Start with the most important fix.
+        Name exact body parts (knees, elbows, hips, chest, etc.). Use plain gym language.
+        Be direct and actionable. No bullet points.
         """
+    }
+
+    private func keypointFramesSummary() -> String {
+        guard !keypointFrames.isEmpty else { return "Pose data: unavailable" }
+
+        // Sample up to 6 evenly spaced frames from the buffer
+        let total = keypointFrames.count
+        let stride = max(1, total / 6)
+        let sampled = Swift.stride(from: 0, to: total, by: stride).map { keypointFrames[$0] }
+
+        let frameLines = sampled.enumerated().map { idx, points in
+            let coords = points.compactMap { kp -> String? in
+                let label = shortLabel(kp.name)
+                return "\(label)(\(String(format: "%.2f", kp.location.x)),\(String(format: "%.2f", kp.location.y)))"
+            }.joined(separator: " ")
+            return "F\(idx + 1): \(coords)"
+        }
+
+        return "Pose sequence (\(sampled.count) frames, x/y normalized 0-1 from top-left):\n" + frameLines.joined(separator: "\n")
+    }
+
+    private func isFaceKeypoint(_ name: PoseKeypointName) -> Bool {
+        switch name {
+        case .nose, .leftEye, .rightEye, .leftEar, .rightEar: return true
+        default: return false
+        }
+    }
+
+    private func shortLabel(_ name: PoseKeypointName) -> String {
+        switch name {
+        case .nose: return "nose"
+        case .leftEye: return "lEye"
+        case .rightEye: return "rEye"
+        case .leftEar: return "lEar"
+        case .rightEar: return "rEar"
+        case .leftShoulder: return "lSho"
+        case .rightShoulder: return "rSho"
+        case .leftElbow: return "lElb"
+        case .rightElbow: return "rElb"
+        case .leftWrist: return "lWri"
+        case .rightWrist: return "rWri"
+        case .leftHip: return "lHip"
+        case .rightHip: return "rHip"
+        case .leftKnee: return "lKne"
+        case .rightKnee: return "rKne"
+        case .leftAnkle: return "lAnk"
+        case .rightAnkle: return "rAnk"
+        }
     }
 
     private func relevantBodyParts(for exercise: String) -> String {
@@ -281,21 +325,13 @@ final class FormCoachService {
     }
 
     private func normalizedCue(_ text: String) -> String {
-        let stripped = cleanedCue(text)
-            .replacingOccurrences(of: "[.!?,:;]", with: "", options: .regularExpression)
+        cleanedCue(text)
             .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
             .trimmingCharacters(in: .whitespacesAndNewlines)
-
-        let limitedWords = stripped
-            .split(separator: " ")
-            .prefix(7)
-            .map(String.init)
-
-        return limitedWords.joined(separator: " ")
     }
 
     private func isUsableCue(_ cue: String, rawIssue: String) -> Bool {
-        guard cue.split(separator: " ").count >= 2 else { return false }
+        guard cue.split(separator: " ").count >= 3 else { return false }
 
         let normalizedCue = cue.lowercased()
         let normalizedIssue = rawIssue.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)

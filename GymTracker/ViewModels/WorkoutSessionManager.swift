@@ -26,6 +26,7 @@ final class WorkoutSessionManager {
     var setupWarnings: [String] = []
     var isLessonSheetPresented = false
     var cameraPermissionDenied = false
+    var poseFrameIndex: Int = 0
 
     private let configuration: AppConfiguration
     private let cameraManager: CameraManager
@@ -138,6 +139,7 @@ final class WorkoutSessionManager {
 
         screen = snapshot.screen
         overlay = snapshot.overlay
+        poseFrameIndex &+= 1
         exerciseDisplayName = snapshot.exerciseState.displayName
         exerciseConfidence = snapshot.exerciseState.confidence
         repCount = snapshot.repCounter.repCount

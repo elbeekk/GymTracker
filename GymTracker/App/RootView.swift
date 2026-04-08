@@ -54,11 +54,7 @@ struct RootView: View {
                     }
                 case .history:
                     NavigationStack {
-                        PlaceholderView(
-                            icon: "calendar.badge.clock",
-                            title: "History",
-                            subtitle: "Your workout history will appear here"
-                        )
+                        HistoryView(workoutStore: workoutStore)
                     }
                 case .profile:
                     NavigationStack {
@@ -72,7 +68,6 @@ struct RootView: View {
             customTabBar
         }
         .ignoresSafeArea(edges: .bottom)
-        .preferredColorScheme(.dark)
         .fullScreenCover(item: $activeWorkoutCover) { cover in
             switch cover {
             case .tutorial(let exercise):
@@ -98,7 +93,7 @@ struct RootView: View {
         switch destination {
         case .exerciseDetail(let exercise):
             ExerciseDetailView(exercise: exercise) {
-                activeWorkoutCover = .tutorial(exercise)
+                activeWorkoutCover = .tracking(exercise)
             }
         }
     }
@@ -144,34 +139,6 @@ private struct TabBarItem: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-    }
-}
-
-// MARK: - Placeholder for unbuilt tabs
-
-private struct PlaceholderView: View {
-    let icon: String
-    let title: String
-    let subtitle: String
-
-    var body: some View {
-        ZStack {
-            AppTheme.gymBg.ignoresSafeArea()
-            VStack(spacing: 16) {
-                Image(systemName: icon)
-                    .font(.system(size: 56, weight: .ultraLight))
-                    .foregroundStyle(AppTheme.gymSubtext)
-                Text(title)
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundStyle(AppTheme.gymText)
-                Text(subtitle)
-                    .font(.system(size: 14))
-                    .foregroundStyle(AppTheme.gymSubtext)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
-            }
-        }
-        .navigationBarHidden(true)
     }
 }
 

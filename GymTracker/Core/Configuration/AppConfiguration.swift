@@ -71,10 +71,10 @@ struct AppConfiguration: Sendable {
 
     struct Anthropic: Sendable {
         var endpoint = URL(string: "https://api.anthropic.com/v1/messages")!
-        // Cheapest current official Anthropic API model.
-        var model = "claude-3-haiku-20240307"
+        // Valid Anthropic Messages API model snapshot for a low-latency Claude variant.
+        var model = "claude-3-5-haiku-20241022"
         var apiVersion = "2023-06-01"
-        var maxTokens = 32
+        var maxTokens = 200
         var temperature = 0.1
         var apiKeyEnvironmentVariable = "ANTHROPIC_API_KEY"
         var apiKeyInfoDictionaryKey = "ANTHROPIC_API_KEY"
@@ -98,10 +98,10 @@ struct AppConfiguration: Sendable {
             }
 
             if
-                let storedValue = AnthropicKeychainStore().load(),
-                !storedValue.isEmpty
+                let keychainValue = AnthropicKeychainStore().load(),
+                !keychainValue.isEmpty
             {
-                return storedValue
+                return keychainValue
             }
 
             return nil

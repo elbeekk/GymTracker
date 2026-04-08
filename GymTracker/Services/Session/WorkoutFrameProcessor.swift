@@ -188,7 +188,6 @@ final class WorkoutFrameProcessor {
             guard
                 let trackedPose = trackingUpdate.trackedPose,
                 trackingUpdate.status == .locked,
-                visibility.isGoodEnough,
                 exerciseState.isStable,
                 exerciseState.isSupported,
                 exerciseState.confidence >= configuration.classification.minimumAcceptedConfidence
@@ -312,10 +311,6 @@ final class WorkoutFrameProcessor {
             break
         }
 
-        guard visibility.isGoodEnough else {
-            return (.paused, visibility.message)
-        }
-
         guard exerciseState.isStable else {
             return (.caution, "Exercise recognition stabilizing")
         }
@@ -324,19 +319,23 @@ final class WorkoutFrameProcessor {
             return (.paused, "AI form tracking is not available for this exercise")
         }
 
-        guard let analysis else {
-            return (.ready, "Get into the start position")
+        if let analysis {
+            guard analysis.isSupported else {
+                return (.paused, analysis.cue ?? visibility.message)
+            }
+
+            if analysis.formPassed {
+                return (.good, analysis.cue ?? "Good form")
+            } else {
+                return (.invalid, analysis.cue ?? "Bad form detected")
+            }
         }
 
-        guard analysis.isSupported else {
-            return (.paused, analysis.cue ?? "No rule set configured")
+        guard visibility.isGoodEnough else {
+            return (.paused, visibility.message)
         }
 
-        if analysis.formPassed {
-            return (.good, analysis.cue ?? "Good form")
-        } else {
-            return (.invalid, analysis.cue ?? "Bad form detected")
-        }
+        return (.ready, "Get into the start position")
     }
 
     private func overlayState(

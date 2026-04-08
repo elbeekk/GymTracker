@@ -3,15 +3,16 @@ import SwiftUI
 struct ExerciseDetailView: View {
     let exercise: CatalogExercise
     let onStartTracking: () -> Void
+    @State private var showPlayer = false
 
     var body: some View {
         ZStack {
             AppTheme.gymBg.ignoresSafeArea()
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 0) {
-                    heroSection
-                    Divider().background(AppTheme.gymBorder).padding(.horizontal, 20)
-                    infoSection
+                    videoSection
+                    titleSection
+                    statsSection
                     muscleSection
                     descriptionSection
                     startButton
@@ -20,7 +21,6 @@ struct ExerciseDetailView: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarColorScheme(.dark, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Text(exercise.name)
@@ -28,61 +28,106 @@ struct ExerciseDetailView: View {
                     .foregroundStyle(AppTheme.gymText)
             }
         }
+        .sheet(isPresented: $showPlayer) {
+            if let videoID = exercise.youtubeShortID {
+                YouTubePlayerSheet(videoID: videoID)
+            }
+        }
     }
 
-    // MARK: - Hero
+    // MARK: - Video thumbnail
 
-    private var heroSection: some View {
+    @ViewBuilder
+    private var videoSection: some View {
+        if let videoID = exercise.youtubeShortID {
+            Button(action: { showPlayer = true }) {
+                GeometryReader { geo in
+                    ZStack {
+                        YouTubeInlineView(videoID: videoID)
+                            .frame(width: geo.size.width, height: geo.size.height)
+
+                        // Tap to expand hint
+                        VStack {
+                            Spacer()
+                            HStack {
+                                Spacer()
+                                Image(systemName: "arrow.up.left.and.arrow.down.right")
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundStyle(.white.opacity(0.7))
+                                    .padding(8)
+                                    .background(.black.opacity(0.45))
+                                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                                    .padding(10)
+                            }
+                        }
+                    }
+                }
+                // 9:16 portrait ratio for Shorts
+                .aspectRatio(9/16, contentMode: .fit)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .padding(.horizontal, 20)
+                .padding(.top, 20)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    // MARK: - Title
+
+    private var titleSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Image(systemName: exercise.category.systemImage)
-                .font(.system(size: 40, weight: .ultraLight))
-                .foregroundStyle(AppTheme.gymSubtext)
-                .padding(.bottom, 8)
-
             if exercise.isAITrackable {
-                AIBadge()
+                AIBadge().padding(.top, 20)
+            } else {
+                Color.clear.frame(height: 20)
             }
             Text(exercise.name)
-                .font(.system(size: 28, weight: .bold))
+                .font(.system(size: 26, weight: .bold))
                 .foregroundStyle(AppTheme.gymText)
             Text(exercise.category.displayName)
-                .font(.system(size: 14))
+                .font(.system(size: 13))
                 .foregroundStyle(AppTheme.gymSubtext)
         }
         .padding(.horizontal, 20)
-        .padding(.top, 24)
-        .padding(.bottom, 24)
+        .padding(.bottom, 20)
     }
 
-    // MARK: - Info row
+    // MARK: - Stats cards (matches HomeView StatCard style)
 
-    private var infoSection: some View {
-        HStack(spacing: 24) {
-            InfoItem(label: "Calories", value: "\(Int(exercise.estimatedCaloriesPerMinute)) /min")
-            InfoItem(label: "Level", value: exercise.difficulty.displayName)
-            Spacer()
+    private var statsSection: some View {
+        HStack(spacing: 12) {
+            StatCard(value: "\(Int(exercise.estimatedCaloriesPerMinute))", unit: "kcal/min", label: "Calories")
+            StatCard(value: exercise.difficulty.displayName, unit: "", label: "Level")
+            StatCard(value: "\(exercise.muscleGroups.count)", unit: "groups", label: "Muscles")
         }
         .padding(.horizontal, 20)
-        .padding(.vertical, 20)
+        .padding(.bottom, 24)
     }
 
     // MARK: - Muscles
 
     private var muscleSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            SectionLabel("Muscles")
-            FlowLayout(spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Muscles")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(AppTheme.gymSubtext)
+                .textCase(.uppercase)
+                .tracking(0.5)
+                .padding(.horizontal, 20)
+
+            VStack(spacing: 1) {
                 ForEach(exercise.muscleGroups, id: \.self) { muscle in
-                    Text(muscle)
-                        .font(.system(size: 13))
-                        .foregroundStyle(AppTheme.gymSubtext)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(AppTheme.gymSurface)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    HStack {
+                        Text(muscle)
+                            .font(.system(size: 14))
+                            .foregroundStyle(AppTheme.gymText)
+                        Spacer()
+                    }
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 20)
+                    Divider().background(AppTheme.gymBorder).padding(.horizontal, 20)
                 }
             }
-            .padding(.horizontal, 20)
         }
         .padding(.bottom, 24)
     }
@@ -90,8 +135,14 @@ struct ExerciseDetailView: View {
     // MARK: - Description
 
     private var descriptionSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            SectionLabel("Description")
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Form Tips")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(AppTheme.gymSubtext)
+                .textCase(.uppercase)
+                .tracking(0.5)
+                .padding(.horizontal, 20)
+
             Text(exercise.description)
                 .font(.system(size: 15))
                 .foregroundStyle(AppTheme.gymSubtext)
@@ -106,11 +157,11 @@ struct ExerciseDetailView: View {
     private var startButton: some View {
         Button(action: onStartTracking) {
             HStack {
-                Text(exercise.isAITrackable ? "Watch Demo & Start AI" : "Watch Demo & Start")
+                Text(exercise.isAITrackable ? "Start AI Tracking" : "Start Workout")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(AppTheme.gymBg)
                 Spacer()
-                Image(systemName: "play.rectangle.fill")
+                Image(systemName: "arrow.right")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(AppTheme.gymBg)
             }
@@ -123,39 +174,38 @@ struct ExerciseDetailView: View {
     }
 }
 
-// MARK: - Helpers
+// MARK: - Stat card (mirrors HomeView style)
 
-private struct SectionLabel: View {
-    let title: String
-    init(_ title: String) { self.title = title }
-    var body: some View {
-        Text(title)
-            .font(.system(size: 11, weight: .semibold))
-            .foregroundStyle(AppTheme.gymSubtext)
-            .textCase(.uppercase)
-            .tracking(0.6)
-            .padding(.horizontal, 20)
-    }
-}
-
-private struct InfoItem: View {
-    let label: String
+private struct StatCard: View {
     let value: String
+    let unit: String
+    let label: String
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .lastTextBaseline, spacing: 3) {
+                Text(value)
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(AppTheme.gymText)
+                if !unit.isEmpty {
+                    Text(unit)
+                        .font(.system(size: 10))
+                        .foregroundStyle(AppTheme.gymSubtext)
+                }
+            }
             Text(label)
                 .font(.system(size: 11))
                 .foregroundStyle(AppTheme.gymSubtext)
-                .textCase(.uppercase)
-                .tracking(0.4)
-            Text(value)
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(AppTheme.gymText)
         }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(AppTheme.gymSurface)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
 
-// Simple wrapping layout for muscle tags
+// Simple wrapping layout kept for any future reuse
 private struct FlowLayout: Layout {
     var spacing: CGFloat = 8
 
@@ -164,14 +214,9 @@ private struct FlowLayout: Layout {
         var x: CGFloat = 0
         var y: CGFloat = 0
         var rowHeight: CGFloat = 0
-
         for view in subviews {
             let size = view.sizeThatFits(.unspecified)
-            if x + size.width > width && x > 0 {
-                y += rowHeight + spacing
-                x = 0
-                rowHeight = 0
-            }
+            if x + size.width > width && x > 0 { y += rowHeight + spacing; x = 0; rowHeight = 0 }
             x += size.width + spacing
             rowHeight = max(rowHeight, size.height)
         }
@@ -182,14 +227,9 @@ private struct FlowLayout: Layout {
         var x = bounds.minX
         var y = bounds.minY
         var rowHeight: CGFloat = 0
-
         for view in subviews {
             let size = view.sizeThatFits(.unspecified)
-            if x + size.width > bounds.maxX && x > bounds.minX {
-                y += rowHeight + spacing
-                x = bounds.minX
-                rowHeight = 0
-            }
+            if x + size.width > bounds.maxX && x > bounds.minX { y += rowHeight + spacing; x = bounds.minX; rowHeight = 0 }
             view.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
             x += size.width + spacing
             rowHeight = max(rowHeight, size.height)

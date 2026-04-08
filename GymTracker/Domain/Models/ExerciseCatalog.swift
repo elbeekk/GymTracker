@@ -46,6 +46,18 @@ enum ExerciseCategory: String, CaseIterable, Identifiable, Hashable, Codable {
         case .fullBody:  return "figure.mixed.cardio"
         }
     }
+
+    var assetImageName: String {
+        switch self {
+        case .chest:     return "CategoryChest"
+        case .back:      return "CategoryBack"
+        case .legs:      return "CategoryLegs"
+        case .arms:      return "CategoryArms"
+        case .shoulders: return "CategoryShoulders"
+        case .core:      return "CategoryCore"
+        case .fullBody:  return "CategoryFullBody"
+        }
+    }
 }
 
 // MARK: - CatalogExercise
@@ -59,6 +71,7 @@ struct CatalogExercise: Identifiable, Hashable, Codable {
     let difficulty: Difficulty
     let estimatedCaloriesPerMinute: Double
     let description: String
+    let youtubeShortID: String?
 
     var isAITrackable: Bool { exerciseType != nil && exerciseType != .unknown }
 
@@ -72,7 +85,8 @@ struct CatalogExercise: Identifiable, Hashable, Codable {
         muscleGroups: [String],
         difficulty: Difficulty = .intermediate,
         caloriesPerMinute: Double = 5.0,
-        description: String
+        description: String,
+        youtubeShortID: String? = nil
     ) {
         self.id = UUID()
         self.name = name
@@ -82,6 +96,7 @@ struct CatalogExercise: Identifiable, Hashable, Codable {
         self.difficulty = difficulty
         self.estimatedCaloriesPerMinute = caloriesPerMinute
         self.description = description
+        self.youtubeShortID = youtubeShortID
     }
 }
 
@@ -95,165 +110,201 @@ extension ExerciseCategory {
                 CatalogExercise(name: "Push-Up", category: .chest, exerciseType: .pushUp,
                     muscleGroups: ["Pectorals", "Triceps", "Shoulders"],
                     difficulty: .beginner, caloriesPerMinute: 7.0,
-                    description: "Classic bodyweight exercise targeting the chest, triceps, and anterior deltoids. Keep your body in a straight line throughout the movement."),
+                    description: "Classic bodyweight exercise targeting the chest, triceps, and anterior deltoids. Keep your body in a straight line throughout the movement.",
+                    youtubeShortID: "uvMeZy5eW-A"),
                 CatalogExercise(name: "Bench Press", category: .chest,
                     muscleGroups: ["Pectorals", "Triceps", "Anterior Deltoids"],
                     difficulty: .intermediate, caloriesPerMinute: 8.0,
-                    description: "Fundamental compound barbell exercise for chest mass and strength. Control the descent and drive explosively on the press."),
+                    description: "Fundamental compound barbell exercise for chest mass and strength. Control the descent and drive explosively on the press.",
+                    youtubeShortID: "ZHOwK7_inuM"),
                 CatalogExercise(name: "Incline Push-Up", category: .chest,
                     muscleGroups: ["Upper Pectorals", "Triceps"],
                     difficulty: .beginner, caloriesPerMinute: 5.0,
-                    description: "Modified push-up targeting the upper chest with hands elevated. Great for beginners building foundational strength."),
+                    description: "Modified push-up targeting the upper chest with hands elevated. Great for beginners building foundational strength.",
+                    youtubeShortID: "mJZafx03sqk"),
                 CatalogExercise(name: "Dumbbell Fly", category: .chest,
                     muscleGroups: ["Pectorals", "Biceps"],
                     difficulty: .intermediate, caloriesPerMinute: 6.0,
-                    description: "Isolation exercise for chest width and stretch. Maintain a slight bend in the elbows throughout."),
+                    description: "Isolation exercise for chest width and stretch. Maintain a slight bend in the elbows throughout.",
+                    youtubeShortID: "8jkIBlOgZUA"),
                 CatalogExercise(name: "Cable Crossover", category: .chest,
                     muscleGroups: ["Pectorals", "Anterior Deltoids"],
                     difficulty: .intermediate, caloriesPerMinute: 6.0,
-                    description: "Cable variation providing constant tension through the full range of motion."),
+                    description: "Cable variation providing constant tension through the full range of motion.",
+                    youtubeShortID: "383dDbInITA"),
             ]
         case .back:
             return [
                 CatalogExercise(name: "Pull-Up", category: .back,
                     muscleGroups: ["Latissimus Dorsi", "Biceps", "Rear Deltoids"],
                     difficulty: .intermediate, caloriesPerMinute: 8.0,
-                    description: "Compound pulling exercise for back width and bicep strength. Drive elbows down to engage lats fully."),
+                    description: "Compound pulling exercise for back width and bicep strength. Drive elbows down to engage lats fully.",
+                    youtubeShortID: "740tMvrrpSA"),
                 CatalogExercise(name: "Bent-Over Row", category: .back,
                     muscleGroups: ["Rhomboids", "Lats", "Biceps"],
                     difficulty: .intermediate, caloriesPerMinute: 7.0,
-                    description: "Barbell or dumbbell row for back thickness and posture. Keep a neutral spine and row to your lower chest."),
+                    description: "Barbell or dumbbell row for back thickness and posture. Keep a neutral spine and row to your lower chest.",
+                    youtubeShortID: "cly8s1QYI34"),
                 CatalogExercise(name: "Lat Pulldown", category: .back,
                     muscleGroups: ["Latissimus Dorsi", "Biceps"],
                     difficulty: .beginner, caloriesPerMinute: 6.0,
-                    description: "Cable exercise mimicking pull-up motion. Ideal for developing lat width before mastering bodyweight pull-ups."),
+                    description: "Cable exercise mimicking pull-up motion. Ideal for developing lat width before mastering bodyweight pull-ups.",
+                    youtubeShortID: "xyqR_f62-mE"),
                 CatalogExercise(name: "Deadlift", category: .back,
                     muscleGroups: ["Erector Spinae", "Hamstrings", "Glutes", "Traps"],
                     difficulty: .advanced, caloriesPerMinute: 10.0,
-                    description: "King of compound lifts. Full posterior chain engagement. Maintain a neutral spine and drive through the heels."),
+                    description: "King of compound lifts. Full posterior chain engagement. Maintain a neutral spine and drive through the heels.",
+                    youtubeShortID: "SK3W0E1rCIY"),
                 CatalogExercise(name: "Seated Cable Row", category: .back,
                     muscleGroups: ["Rhomboids", "Lats", "Biceps"],
                     difficulty: .beginner, caloriesPerMinute: 6.0,
-                    description: "Horizontal pulling movement for mid-back development. Squeeze shoulder blades together at peak contraction."),
+                    description: "Horizontal pulling movement for mid-back development. Squeeze shoulder blades together at peak contraction.",
+                    youtubeShortID: "eK6i9lXHe8M"),
             ]
         case .legs:
             return [
                 CatalogExercise(name: "Squat", category: .legs, exerciseType: .squat,
                     muscleGroups: ["Quadriceps", "Glutes", "Hamstrings"],
                     difficulty: .beginner, caloriesPerMinute: 8.0,
-                    description: "Foundational lower body compound movement. Keep your chest up, knees tracking over toes, and descend to parallel."),
+                    description: "Foundational lower body compound movement. Keep your chest up, knees tracking over toes, and descend to parallel.",
+                    youtubeShortID: "fewvFU56y-4"),
                 CatalogExercise(name: "Lunge", category: .legs, exerciseType: .lunge,
                     muscleGroups: ["Quadriceps", "Glutes", "Hamstrings"],
                     difficulty: .beginner, caloriesPerMinute: 7.0,
-                    description: "Unilateral exercise improving leg strength and balance. Step forward and lower your back knee toward the floor."),
+                    description: "Unilateral exercise improving leg strength and balance. Step forward and lower your back knee toward the floor.",
+                    youtubeShortID: "B91FVgMFyy8"),
                 CatalogExercise(name: "Leg Press", category: .legs,
                     muscleGroups: ["Quadriceps", "Glutes"],
                     difficulty: .beginner, caloriesPerMinute: 7.0,
-                    description: "Machine-based quad and glute developer. Keep feet hip-width and don't lock out knees at the top."),
+                    description: "Machine-based quad and glute developer. Keep feet hip-width and don't lock out knees at the top.",
+                    youtubeShortID: "b1fEpzHovoY"),
                 CatalogExercise(name: "Romanian Deadlift", category: .legs,
                     muscleGroups: ["Hamstrings", "Glutes", "Lower Back"],
                     difficulty: .intermediate, caloriesPerMinute: 8.0,
-                    description: "Hip hinge movement targeting posterior chain. Push hips back and feel the hamstring stretch before driving through."),
+                    description: "Hip hinge movement targeting posterior chain. Push hips back and feel the hamstring stretch before driving through.",
+                    youtubeShortID: "TIIrEXtEwQ4"),
                 CatalogExercise(name: "Calf Raise", category: .legs,
                     muscleGroups: ["Gastrocnemius", "Soleus"],
                     difficulty: .beginner, caloriesPerMinute: 4.0,
-                    description: "Isolation exercise for calf muscle development. Pause at the top and bottom for maximum range of motion."),
+                    description: "Isolation exercise for calf muscle development. Pause at the top and bottom for maximum range of motion.",
+                    youtubeShortID: "KhZOdfsXJhw"),
             ]
         case .arms:
             return [
                 CatalogExercise(name: "Bicep Curl", category: .arms, exerciseType: .bicepCurl,
                     muscleGroups: ["Biceps Brachii", "Brachialis"],
                     difficulty: .beginner, caloriesPerMinute: 5.0,
-                    description: "Classic curl for bicep peak and strength. Keep elbows pinned to sides and avoid swinging torso."),
+                    description: "Classic curl for bicep peak and strength. Keep elbows pinned to sides and avoid swinging torso.",
+                    youtubeShortID: "WPdrx11362Y"),
                 CatalogExercise(name: "Tricep Dip", category: .arms,
                     muscleGroups: ["Triceps", "Anterior Deltoids"],
                     difficulty: .intermediate, caloriesPerMinute: 6.0,
-                    description: "Bodyweight tricep isolation using parallel bars or bench. Lean forward slightly for more chest emphasis."),
+                    description: "Bodyweight tricep isolation using parallel bars or bench. Lean forward slightly for more chest emphasis.",
+                    youtubeShortID: "Zye1v3toiB4"),
                 CatalogExercise(name: "Hammer Curl", category: .arms,
                     muscleGroups: ["Biceps", "Brachioradialis"],
                     difficulty: .beginner, caloriesPerMinute: 5.0,
-                    description: "Neutral grip curl targeting the brachialis and outer bicep head. Great for overall arm thickness."),
+                    description: "Neutral grip curl targeting the brachialis and outer bicep head. Great for overall arm thickness.",
+                    youtubeShortID: "OfSr58daFs4"),
                 CatalogExercise(name: "Skull Crusher", category: .arms,
                     muscleGroups: ["Triceps Long Head"],
                     difficulty: .intermediate, caloriesPerMinute: 5.0,
-                    description: "Lying tricep extension for full development. Lower the weight slowly toward your forehead, keeping elbows stable."),
+                    description: "Lying tricep extension for full development. Lower the weight slowly toward your forehead, keeping elbows stable.",
+                    youtubeShortID: "_d6xPgq_HY0"),
                 CatalogExercise(name: "Preacher Curl", category: .arms,
                     muscleGroups: ["Biceps Brachii"],
                     difficulty: .beginner, caloriesPerMinute: 4.0,
-                    description: "Strict curl on a preacher bench, eliminating momentum for peak bicep isolation."),
+                    description: "Strict curl on a preacher bench, eliminating momentum for peak bicep isolation.",
+                    youtubeShortID: "OQQlZ35ORRI"),
             ]
         case .shoulders:
             return [
                 CatalogExercise(name: "Shoulder Press", category: .shoulders, exerciseType: .shoulderPress,
                     muscleGroups: ["Anterior Deltoids", "Medial Deltoids", "Triceps"],
                     difficulty: .intermediate, caloriesPerMinute: 7.0,
-                    description: "Overhead pressing for shoulder size and strength. Press straight up and fully extend at the top."),
+                    description: "Overhead pressing for shoulder size and strength. Press straight up and fully extend at the top.",
+                    youtubeShortID: "D9QIdIed_rk"),
                 CatalogExercise(name: "Lateral Raise", category: .shoulders,
                     muscleGroups: ["Medial Deltoids"],
                     difficulty: .beginner, caloriesPerMinute: 4.0,
-                    description: "Isolation for shoulder width via medial delt development. Lead with your elbows, not your hands."),
+                    description: "Isolation for shoulder width via medial delt development. Lead with your elbows, not your hands.",
+                    youtubeShortID: "HKgsJkSL6Jg"),
                 CatalogExercise(name: "Front Raise", category: .shoulders,
                     muscleGroups: ["Anterior Deltoids"],
                     difficulty: .beginner, caloriesPerMinute: 4.0,
-                    description: "Frontal raise targeting the anterior deltoid. Raise to shoulder height and control the descent."),
+                    description: "Frontal raise targeting the anterior deltoid. Raise to shoulder height and control the descent.",
+                    youtubeShortID: "gRRGWu67EXY"),
                 CatalogExercise(name: "Face Pull", category: .shoulders,
                     muscleGroups: ["Rear Deltoids", "Rotator Cuff", "Rhomboids"],
                     difficulty: .beginner, caloriesPerMinute: 5.0,
-                    description: "Cable exercise for rear delts and rotator cuff health. Essential for shoulder longevity and posture."),
+                    description: "Cable exercise for rear delts and rotator cuff health. Essential for shoulder longevity and posture.",
+                    youtubeShortID: "PeJqWTwP4bc"),
                 CatalogExercise(name: "Arnold Press", category: .shoulders,
                     muscleGroups: ["All Three Deltoid Heads", "Triceps"],
                     difficulty: .intermediate, caloriesPerMinute: 7.0,
-                    description: "Rotating dumbbell press hitting all three deltoid heads through the rotational motion."),
+                    description: "Rotating dumbbell press hitting all three deltoid heads through the rotational motion.",
+                    youtubeShortID: "-Rrlaln2bXw"),
             ]
         case .core:
             return [
                 CatalogExercise(name: "Plank", category: .core,
                     muscleGroups: ["Rectus Abdominis", "Transverse Abdominis", "Obliques"],
                     difficulty: .beginner, caloriesPerMinute: 4.0,
-                    description: "Isometric hold for core stability and endurance. Maintain a straight line from head to heels."),
+                    description: "Isometric hold for core stability and endurance. Maintain a straight line from head to heels.",
+                    youtubeShortID: "7su9As9w808"),
                 CatalogExercise(name: "Crunch", category: .core,
                     muscleGroups: ["Rectus Abdominis"],
                     difficulty: .beginner, caloriesPerMinute: 4.0,
-                    description: "Basic abdominal flexion. Focus on curling the ribcage toward the pelvis, not pulling the neck."),
+                    description: "Basic abdominal flexion. Focus on curling the ribcage toward the pelvis, not pulling the neck.",
+                    youtubeShortID: "eM0nf26Si_M"),
                 CatalogExercise(name: "Russian Twist", category: .core,
                     muscleGroups: ["Obliques", "Rectus Abdominis"],
                     difficulty: .beginner, caloriesPerMinute: 5.0,
-                    description: "Rotational core exercise targeting the obliques. Pause and squeeze at each end of the rotation."),
+                    description: "Rotational core exercise targeting the obliques. Pause and squeeze at each end of the rotation.",
+                    youtubeShortID: "-mS01E9QoYg"),
                 CatalogExercise(name: "Leg Raise", category: .core,
                     muscleGroups: ["Lower Abs", "Hip Flexors"],
                     difficulty: .intermediate, caloriesPerMinute: 5.0,
-                    description: "Lower abdominal focus. Keep lower back pressed to the floor and lower legs with control."),
+                    description: "Lower abdominal focus. Keep lower back pressed to the floor and lower legs with control.",
+                    youtubeShortID: "JK7W-rk7gIs"),
                 CatalogExercise(name: "Mountain Climber", category: .core,
                     muscleGroups: ["Core", "Hip Flexors", "Shoulders"],
                     difficulty: .intermediate, caloriesPerMinute: 8.0,
-                    description: "Dynamic plank variation for core and cardiovascular conditioning. Drive knees to chest in a running motion."),
+                    description: "Dynamic plank variation for core and cardiovascular conditioning. Drive knees to chest in a running motion.",
+                    youtubeShortID: "NkqLcnrRWUs"),
                 CatalogExercise(name: "Ab Wheel Rollout", category: .core,
                     muscleGroups: ["Rectus Abdominis", "Transverse Abdominis"],
                     difficulty: .advanced, caloriesPerMinute: 6.0,
-                    description: "Advanced anti-extension exercise. Roll out slowly and pull back with your abs, not your hips."),
+                    description: "Advanced anti-extension exercise. Roll out slowly and pull back with your abs, not your hips.",
+                    youtubeShortID: "gxdLwZKMoDE"),
             ]
         case .fullBody:
             return [
                 CatalogExercise(name: "Burpee", category: .fullBody,
                     muscleGroups: ["Full Body", "Cardiovascular"],
                     difficulty: .intermediate, caloriesPerMinute: 12.0,
-                    description: "High-intensity full-body conditioning exercise. Combines squat, plank, and jump for maximum calorie burn."),
+                    description: "High-intensity full-body conditioning exercise. Combines squat, plank, and jump for maximum calorie burn.",
+                    youtubeShortID: "4ASoPGd_FNA"),
                 CatalogExercise(name: "Kettlebell Swing", category: .fullBody,
                     muscleGroups: ["Glutes", "Hamstrings", "Core", "Shoulders"],
                     difficulty: .intermediate, caloriesPerMinute: 10.0,
-                    description: "Explosive hip hinge movement for power and conditioning. Drive hips forward aggressively at the top."),
+                    description: "Explosive hip hinge movement for power and conditioning. Drive hips forward aggressively at the top.",
+                    youtubeShortID: "OlmR5lH60Io"),
                 CatalogExercise(name: "Box Jump", category: .fullBody,
                     muscleGroups: ["Quads", "Glutes", "Calves"],
                     difficulty: .intermediate, caloriesPerMinute: 10.0,
-                    description: "Plyometric jump for power development. Land softly and step down to protect joints."),
+                    description: "Plyometric jump for power development. Land softly and step down to protect joints.",
+                    youtubeShortID: "Yfni7eCjFrE"),
                 CatalogExercise(name: "Clean & Press", category: .fullBody,
                     muscleGroups: ["Full Body"],
                     difficulty: .advanced, caloriesPerMinute: 11.0,
-                    description: "Olympic-style movement combining power clean and overhead press. Demands full-body coordination and power."),
+                    description: "Olympic-style movement combining power clean and overhead press. Demands full-body coordination and power.",
+                    youtubeShortID: "zkGd2CRxYA8"),
                 CatalogExercise(name: "Thruster", category: .fullBody,
                     muscleGroups: ["Quads", "Glutes", "Shoulders", "Triceps"],
                     difficulty: .advanced, caloriesPerMinute: 12.0,
-                    description: "Front squat into overhead press in one fluid motion. A CrossFit staple for total conditioning."),
+                    description: "Front squat into overhead press in one fluid motion. A CrossFit staple for total conditioning.",
+                    youtubeShortID: "Vr0QaT8C8KI"),
             ]
         }
     }

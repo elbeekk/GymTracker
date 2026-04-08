@@ -7,21 +7,6 @@ struct SkeletonOverlayView: View {
     var body: some View {
         GeometryReader { geometry in
             Canvas { context, size in
-                if overlay.showCalibrationGuide {
-                    let guideRect = CGRect(
-                        x: size.width * 0.18,
-                        y: size.height * 0.08,
-                        width: size.width * 0.64,
-                        height: size.height * 0.80
-                    )
-
-                    context.stroke(
-                        Path(roundedRect: guideRect, cornerRadius: 28),
-                        with: .color(.white.opacity(0.35)),
-                        style: StrokeStyle(lineWidth: 2, dash: [10, 8])
-                    )
-                }
-
                 for person in overlay.people {
                     let style = style(for: person.role)
 

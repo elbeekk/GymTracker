@@ -16,7 +16,7 @@ struct AnthropicCoachService: Sendable {
     ) async throws -> String {
         var request = URLRequest(url: configuration.endpoint)
         request.httpMethod = "POST"
-        request.timeoutInterval = 15
+        request.timeoutInterval = 20
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         request.setValue(configuration.apiVersion, forHTTPHeaderField: "anthropic-version")
         request.setValue("application/json", forHTTPHeaderField: "content-type")
@@ -58,14 +58,11 @@ struct AnthropicCoachService: Sendable {
 
     private var systemPrompt: String {
         """
-        You are a live gym form coach.
-        Return one short spoken correction only.
-        Never mention rep counting, invalid reps, range of motion, metrics, analysis, or tracking.
-        Start with an action verb.
-        Name a body part.
-        Use plain gym language.
-        Maximum 7 words.
-        No punctuation.
+        You are a live gym form coach watching someone exercise via body-pose tracking.
+        Give 2-3 sentences of specific, actionable corrections based on what you observe in the pose data.
+        Use plain gym language — never say "range of motion", "metrics", "tracking", "analysis", "alignment", or "rep counted".
+        Name specific body parts. Start with the most important correction first.
+        Be direct and encouraging. No bullet points, no headers, just spoken coaching sentences.
         """
     }
 }

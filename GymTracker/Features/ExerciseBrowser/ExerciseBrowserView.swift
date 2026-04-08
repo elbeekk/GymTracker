@@ -133,12 +133,24 @@ struct CategoryCard: View {
     let category: ExerciseCategory
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Image(systemName: category.systemImage)
-                .font(.system(size: 22, weight: .light))
-                .foregroundStyle(AppTheme.gymText)
+        VStack(alignment: .leading, spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(AppTheme.gymCard)
 
-            VStack(alignment: .leading, spacing: 2) {
+                Image(category.assetImageName)
+                    .resizable()
+                    .scaledToFit()
+                    .padding(9)
+            }
+            .frame(width: 62, height: 62)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(AppTheme.gymBorder, lineWidth: 1)
+            )
+
+            VStack(alignment: .leading, spacing: 4) {
                 Text(category.displayName)
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(AppTheme.gymText)
@@ -149,8 +161,13 @@ struct CategoryCard: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 18)
+        .frame(minHeight: 150, alignment: .topLeading)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(AppTheme.gymSurface)
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(AppTheme.gymBorder, lineWidth: 1)
+        )
         .clipShape(RoundedRectangle(cornerRadius: 14))
         .contentShape(Rectangle())
     }
@@ -170,6 +187,11 @@ struct ExerciseRowCard: View {
                         .foregroundStyle(AppTheme.gymText)
                     if exercise.isAITrackable {
                         AIBadge()
+                    }
+                    if exercise.youtubeShortID != nil {
+                        Image(systemName: "play.rectangle.fill")
+                            .font(.system(size: 10))
+                            .foregroundStyle(AppTheme.gymSubtext.opacity(0.6))
                     }
                 }
                 Text(exercise.muscleGroups.prefix(2).joined(separator: ", "))

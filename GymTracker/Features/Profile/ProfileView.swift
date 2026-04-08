@@ -1,148 +1,99 @@
 import SwiftUI
 
 struct ProfileView: View {
-    @State private var apiKey = ""
-    @State private var hasStoredKey = false
-    @State private var statusMessage = "Paste your Claude API key to enable live Anthropic coaching."
-    @State private var statusColor = AppTheme.gymSubtext
-
-    private let keychain = AnthropicKeychainStore()
-
     var body: some View {
         ZStack {
             AppTheme.gymBg.ignoresSafeArea()
 
-            VStack(alignment: .leading, spacing: 24) {
-                VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 0) {
+                // Header
+                VStack(alignment: .leading, spacing: 4) {
                     Text("Profile")
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(.system(size: 26, weight: .bold))
                         .foregroundStyle(AppTheme.gymText)
-
-                    Text("Claude Coach")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(AppTheme.gymSubtext)
-                }
-
-                VStack(alignment: .leading, spacing: 14) {
-                    Text("Anthropic API Key")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(AppTheme.gymText)
-
-                    SecureField("sk-ant-api...", text: $apiKey)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .font(.system(size: 14, weight: .regular, design: .monospaced))
-                        .foregroundStyle(AppTheme.gymText)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 14)
-                        .background(AppTheme.gymCard)
-                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-
-                    Text(hasStoredKey ? "Claude key is saved in Keychain on this device." : "No Claude key saved yet.")
-                        .font(.system(size: 13))
-                        .foregroundStyle(statusColor)
-
-                    Text(statusMessage)
+                    Text("Gymo")
                         .font(.system(size: 13))
                         .foregroundStyle(AppTheme.gymSubtext)
-                        .fixedSize(horizontal: false, vertical: true)
                 }
+                .padding(.horizontal, 20)
+                .padding(.top, 56)
+                .padding(.bottom, 28)
 
-                HStack(spacing: 12) {
-                    Button(action: saveKey) {
-                        Text("Save Claude Key")
+                // AI Coach status card
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(AppTheme.gymGreen.opacity(0.15))
+                            .frame(width: 44, height: 44)
+                        Image(systemName: "brain.head.profile")
+                            .font(.system(size: 20))
+                            .foregroundStyle(AppTheme.gymGreen)
+                    }
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Claude AI Coach")
                             .font(.system(size: 15, weight: .semibold))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(AppTheme.gymText)
-                            .foregroundStyle(AppTheme.gymBg)
-                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    }
-                    .buttonStyle(.plain)
-
-                    Button(action: removeKey) {
-                        Text("Remove")
-                            .font(.system(size: 15, weight: .medium))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(AppTheme.gymCard)
                             .foregroundStyle(AppTheme.gymText)
-                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        Text("Cloud coaching runs when a Claude key is configured")
+                            .font(.system(size: 12))
+                            .foregroundStyle(AppTheme.gymSubtext)
                     }
-                    .buttonStyle(.plain)
+                    Spacer()
+                    Circle()
+                        .fill(AppTheme.gymGreen)
+                        .frame(width: 8, height: 8)
                 }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+                .background(AppTheme.gymSurface)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+                .padding(.horizontal, 20)
+                .padding(.bottom, 24)
 
-                VStack(alignment: .leading, spacing: 10) {
+                // How it works
+                VStack(alignment: .leading, spacing: 12) {
                     Text("How it works")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(AppTheme.gymText)
-
-                    Text("1. Save your Claude key here once.")
-                        .font(.system(size: 13))
+                        .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(AppTheme.gymSubtext)
+                        .textCase(.uppercase)
+                        .tracking(0.5)
+                        .padding(.horizontal, 20)
 
-                    Text("2. Open any exercise tracker.")
-                        .font(.system(size: 13))
-                        .foregroundStyle(AppTheme.gymSubtext)
-
-                    Text("3. The tracking screen will show Claude status and speak the correction.")
-                        .font(.system(size: 13))
-                        .foregroundStyle(AppTheme.gymSubtext)
+                    VStack(spacing: 1) {
+                        HowItWorksRow(number: "1", text: "Pick an exercise from the Workout tab")
+                        Divider().background(AppTheme.gymBorder).padding(.horizontal, 20)
+                        HowItWorksRow(number: "2", text: "Stand in front of the camera and start")
+                        Divider().background(AppTheme.gymBorder).padding(.horizontal, 20)
+                        HowItWorksRow(number: "3", text: "The coach speaks live corrections from pose analysis")
+                    }
                 }
 
                 Spacer()
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 28)
-            .padding(.bottom, 110)
         }
         .navigationBarHidden(true)
-        .onAppear(perform: loadState)
     }
+}
 
-    private func loadState() {
-        let storedKey = keychain.load()
-        hasStoredKey = storedKey?.isEmpty == false
-        apiKey = ""
-        statusMessage = hasStoredKey
-            ? "Claude is configured for future tracking sessions."
-            : "Paste your Claude API key to enable live Anthropic coaching."
-        statusColor = hasStoredKey ? AppTheme.success : AppTheme.gymSubtext
-    }
+private struct HowItWorksRow: View {
+    let number: String
+    let text: String
 
-    private func saveKey() {
-        guard !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            statusMessage = "Paste a valid Claude API key first."
-            statusColor = AppTheme.danger
-            return
+    var body: some View {
+        HStack(spacing: 14) {
+            Text(number)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(AppTheme.gymAccent)
+                .frame(width: 20)
+            Text(text)
+                .font(.system(size: 14))
+                .foregroundStyle(AppTheme.gymText)
+            Spacer()
         }
-
-        if keychain.save(apiKey) {
-            hasStoredKey = true
-            apiKey = ""
-            statusMessage = "Claude key saved. Reopen tracking to use Anthropic."
-            statusColor = AppTheme.success
-        } else {
-            statusMessage = "Could not save the Claude key."
-            statusColor = AppTheme.danger
-        }
-    }
-
-    private func removeKey() {
-        if keychain.delete() {
-            hasStoredKey = false
-            apiKey = ""
-            statusMessage = "Claude key removed."
-            statusColor = AppTheme.warning
-        } else {
-            statusMessage = "Could not remove the Claude key."
-            statusColor = AppTheme.danger
-        }
+        .padding(.vertical, 13)
+        .padding(.horizontal, 20)
     }
 }
 
 #Preview {
-    NavigationStack {
-        ProfileView()
-    }
+    NavigationStack { ProfileView() }
 }
